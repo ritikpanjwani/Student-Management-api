@@ -1,12 +1,22 @@
 from sqlalchemy import create_engine                      # Creates database connection
 from sqlalchemy.orm import sessionmaker, declarative_base # Imports ORM utilities
 from sqlalchemy.orm import Session                        # For type hinting
+from dotenv import load_dotenv
+import os
 
-# Database connection URL
-DATABASE_URL = "mysql+pymysql://root:root123@localhost/fastapi_db"
+# Load local configuration from .env (without overwriting real environment values).
+load_dotenv()
 
-# Bridge between Python and MySQL
-engine = create_engine(DATABASE_URL)
+# Database connection URL. Set DATABASE_URL in .env before starting the app.
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL is not configured. Copy .env.example to .env and set it."
+    )
+
+# Bridge between Python and MySQL. Pool checks prevent stale connections.
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Base class for all database models
 Base = declarative_base()
@@ -27,14 +37,3 @@ def get_db():
 
     finally:
         db.close()          # Close session after use
-
-
-# the above func do this to avoid redudancy
-# generator = get_db()
-
-# db = next(generator)
-
-# try:
-#     get_students(db)
-# finally:
-#     generator.close()
